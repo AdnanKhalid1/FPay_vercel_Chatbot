@@ -18,10 +18,15 @@
   <input type="text" id="userInput" placeholder="Type your question..." style="width:80%;"/>
   <button id="sendBtn">Send</button>
 
-  <script>
+  <script type="module">
+    import { Client } from "@gradio/client";
+
     const chat = document.getElementById('chat');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
+
+    // Connect to the Gradio Client
+    const client = await Client.connect("adnankhd/fpfaqbotdemo");
 
     sendBtn.addEventListener('click', async () => {
       const query = userInput.value.trim();
@@ -30,34 +35,11 @@
       userInput.value = '';
 
       try {
-        // Step 1: Send the initial request
-        const initResponse = await fetch("https://adnankhd-fpfaqbotdemo.hf.space/gradio_api/call/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data: [query] })
-        });
+        // Call the Gradio predict API
+        const result = await client.predict("/predict", { query });
+        const answer = result.data;
 
-        const initResult = await initResponse.json();
-
-        // Check if EVENT_ID is present
-        if (!initResult || !initResult.event_id) {
-          addMessage("Error: No event ID returned from the server.", 'bot');
-          return;
-        }
-
-        const eventId = initResult.event_id;
-
-        // Step 2: Poll for the result using EVENT_ID
-        const finalResponse = await fetch(`https://adnankhd-fpfaqbotdemo.hf.space/gradio_api/call/predict/${eventId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" }
-        });
-
-        const finalResult = await finalResponse.json();
-
-        // Extract the answer from the response
-        if (finalResult && finalResult.data && finalResult.data.length > 0) {
-          const answer = finalResult.data[0];
+        if (answer) {
           addMessage(answer, 'bot');
         } else {
           addMessage("Sorry, I couldn't understand the response from the server.", 'bot');
