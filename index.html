@@ -25,8 +25,21 @@
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
 
-    // Connect to the Gradio Client
-    const client = await Client.connect("adnankhd/fpfaqbotdemo");
+    let client;
+
+    // Initialize the client inside an async function
+    async function initializeClient() {
+      try {
+        client = await Client.connect("adnankhd/fpfaqbotdemo");
+        console.log("Connected to Gradio client successfully.");
+      } catch (error) {
+        console.error("Failed to connect to Gradio client:", error);
+        addMessage("Error: Unable to connect to the chatbot server.", 'bot');
+      }
+    }
+
+    // Call the initialization function
+    initializeClient();
 
     sendBtn.addEventListener('click', async () => {
       const query = userInput.value.trim();
@@ -34,9 +47,15 @@
       addMessage(query, 'user');
       userInput.value = '';
 
+      if (!client) {
+        addMessage("Error: Chatbot server is not initialized. Please try again later.", 'bot');
+        return;
+      }
+
       try {
         // Call the Gradio predict API
         const result = await client.predict("/predict", { query });
+        console.log("API Response:", result);
         const answer = result.data;
 
         if (answer) {
