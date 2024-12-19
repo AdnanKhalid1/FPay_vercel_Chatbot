@@ -29,19 +29,7 @@
       addMessage(query, 'user');
       userInput.value = '';
 
-      // Call your Hugging Face backend
-      //const response = await fetch("https://api-inference.huggingface.co/models/...", { 
-        // Alternatively, if using gradio_client endpoint:
-        // Actually, since gradio_client is Python-only, let's just use the Space's direct API. 
-        // Many Gradio Spaces expose a /predict endpoint you can call with a POST request.
-        // Replace "username/your-spacename" with your actual space name and the correct endpoint.
-        
-        //method: "POST",
-        //headers: { "Content-Type": "application/json" },
-        //body: JSON.stringify({ data: [query] })
-      //});
-
-        try {
+      try {
         // Call your Hugging Face backend
         const response = await fetch("https://adnankhd-fpfaqbotdemo.hf.space/gradio_api/call/predict", {
           method: "POST",
@@ -49,13 +37,19 @@
           body: JSON.stringify({ data: [query] })
         });
 
+        const result = await response.json();
 
-
-      const result = await response.json();
-      // The result structure depends on the Space’s API. Typically for Gradio:
-      // result = { data: ["Answer text"] }
-      const answer = result.data[0];
-      addMessage(answer, 'bot');
+        // Check if the response contains valid data
+        if (result && result.data && result.data.length > 0) {
+          const answer = result.data[0];
+          addMessage(answer, 'bot');
+        } else {
+          addMessage("Sorry, I couldn't understand the response from the server.", 'bot');
+        }
+      } catch (error) {
+        console.error("Error calling API:", error);
+        addMessage("Error: Unable to fetch response from the chatbot. Please try again later.", 'bot');
+      }
     });
 
     function addMessage(text, role) {
@@ -68,4 +62,3 @@
   </script>
 </body>
 </html>
- 
